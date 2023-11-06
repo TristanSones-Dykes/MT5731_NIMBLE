@@ -1,0 +1,82 @@
+---
+title: "NIMBLE Project Report"
+author: "Tristan Sones-Dykes"
+date: "Date: `r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  pdf_document:
+---
+
+```{r, echo=FALSE, results=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(here)
+library(nimble)
+
+df <- read_csv(here("input.csv"))
+```
+
+# Data
+
+The input data format is as follows:
+
+| yi  | xi  | zi  |
+|---- |---- |---- |
+| ... | ... | ... |
+
+The variables represent the total length of time spent telephoning (yi), the number of telephone calls made (xi), and a binary feature for weekdays (zi).
+
+# Model Specification
+
+## Likelihood
+
+The model assumes a linear relationship between the response variable (yi) and the explanatory variables (xi and zi) as follows:
+
+\[ yi = \alpha + \beta xi + \gamma zi + \epsilon_i \]
+
+Where \( \epsilon_i \sim N(0, \sigma^2) \) represents the error term.
+
+## Priors
+
+The prior distributions of the variables are as follows:
+
+- \( \alpha \sim N(µ_{\alpha}, \sigma^2_{\alpha}) \)
+- \( \beta \sim N(µ_{\beta}, \sigma^2_{\beta}) \)
+- \( \gamma \sim N(µ_{\gamma}, \sigma^2_{\gamma}) \)
+- \( \sigma^2 \sim \Gamma^{-1}(a, b) \)
+
+(1)
+Vague priors for these are:
+
+- \( \alpha \sim N(0, 10^5) \)
+- \( \beta \sim N(0, 10^5) \)
+- \( \gamma \sim N(0, 10^5) \)
+- \( \sigma^2 \sim \Gamma^{-1}(0.0001, 0.0001) \)
+
+This ensures both the normals and inverse gamma is very flat, and therefore vague.
+
+\newpage
+
+# Data Analysis
+
+## Exploration
+
+(2a) The data is plotted below:
+
+```{r}
+ggplot(df, aes(x = xi, y = yi, colour = factor(zi))) + 
+    geom_point() + 
+    labs(x = "Number of calls", 
+    y = "Time spent telephoning (mins)", 
+    colour = "Weekday", 
+    title = "Time spent telephoning vs. number of calls")
+```
+
+Looking at the plot, the model seems very reasonable. There is a clear linear relationship between
+xi and yi, and the binary feature zi has very little mixing between the two classes.
+
+\newpage
+
+## Model Fitting
+
+(2b) The model is fitted using the following code:
+
+```{r}
